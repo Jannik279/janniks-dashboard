@@ -13,9 +13,9 @@ icon: "🏠",
 label: "Home",
 },
 {
-  href: "/weltinfo",
-  icon: "🌍",
-  label: "Weltinfo",
+href: "/weltinfo",
+icon: "🌍",
+label: "Weltinfo",
 },
 {
 href: "/tasks",
@@ -28,20 +28,14 @@ icon: "📅",
 label: "Kalender",
 },
 {
-href: "/ai",
-icon: "🤖",
-label: "KI",
-},
-{
 href: "/settings",
 icon: "⚙️",
 label: "Settings",
 },
-
 ];
 
 return (
-<div className=" md:hidden fixed bottom-4 left-4 right-4 z-50 " >
+<div className="md:hidden fixed bottom-4 left-4 right-4 z-50">
 <nav className=" bg-black/40 backdrop-blur-2xl border border-white/10 rounded-3xl px-3 py-3 shadow-2xl " >
 <div className="flex items-center justify-between">
 {links.map((link) => {

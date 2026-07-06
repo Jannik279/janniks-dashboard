@@ -32,9 +32,9 @@ icon: "🏠",
 label: "Dashboard",
 },
 {
-  href: "/weltinfo",
-  label: "Weltinfo",
-  icon: "🌍",
+href: "/weltinfo",
+label: "Weltinfo",
+icon: "🌍",
 },
 {
 href: "/tasks",
@@ -53,16 +53,10 @@ icon: "📅",
 label: "Kalender",
 },
 {
-href: "/ai",
-icon: "🤖",
-label: "KI-Zentrale",
-},
-{
 href: "/settings",
 icon: "⚙️",
 label: "Einstellungen",
 },
-
 ];
 
 return (
