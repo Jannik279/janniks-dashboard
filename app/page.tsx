@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabase";
 
 type Task = {
   id: number;
@@ -16,6 +17,36 @@ type Event = {
 
 export default function Home() {
   const [time, setTime] = useState("");
+  const [showClock, setShowClock] =
+  useState(false);
+const [clockMode, setClockMode] =
+  useState<
+    "digital" |
+    "analog" |
+    "stopwatch" |
+    "timer"
+  >("digital");
+
+const [stopwatchTime, setStopwatchTime] =
+  useState(0);
+
+const [stopwatchRunning, setStopwatchRunning] =
+  useState(false);
+
+const [timerMinutes, setTimerMinutes] =
+  useState(5);
+
+const [timerInputSeconds, setTimerInputSeconds] =
+  useState(0);
+
+const [timerSeconds, setTimerSeconds] =
+  useState(300);
+
+const [timerRunning, setTimerRunning] =
+  useState(false);
+
+const [seconds, setSeconds] =
+  useState("00");
   const [taskCount, setTaskCount] = useState(0);
   const [nextTask, setNextTask] = useState("");
   const [notePreview, setNotePreview] = useState("");
@@ -25,18 +56,141 @@ export default function Home() {
 
   const [nextEvent, setNextEvent] = useState<Event | null>(null);
 
+  const [username, setUsername] =
+  useState("Benutzer");
+  const [background, setBackground] =
+  useState("default");
+  const [focusMode, setFocusMode] =
+  useState(false);
+
+  useEffect(() => {
+    loadProfile();
+  }, []);
+
+  useEffect(() => {
+  const savedBackground =
+    localStorage.getItem(
+      "jannik-background"
+    );
+
+  if (savedBackground) {
+    setBackground(savedBackground);
+  }
+}, []);
+
+  async function loadProfile() {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+
+    const { data } = await supabase
+      .from("profiles")
+      .select("username")
+      .eq("id", user.id)
+      .single();
+
+    if (data) {
+      setUsername(data.username);
+    }
+  }
+  function changeBackground(
+  bg: string
+) {
+  setBackground(bg);
+
+  localStorage.setItem(
+    "jannik-background",
+    bg
+  );
+}
+
+  useEffect(() => {
+  const handleEsc = (
+    event: KeyboardEvent
+  ) => {
+    if (event.key === "Escape") {
+      setShowClock(false);
+    }
+  };
+
+  window.addEventListener(
+    "keydown",
+    handleEsc
+  );
+
+  return () =>
+    window.removeEventListener(
+      "keydown",
+      handleEsc
+    );
+}, []);
+
+useEffect(() => {
+  let interval: NodeJS.Timeout;
+
+  if (stopwatchRunning) {
+    interval = setInterval(() => {
+      setStopwatchTime(
+        (prev) => prev + 10
+      );
+    }, 10);
+  }
+
+  return () =>
+    clearInterval(interval);
+}, [stopwatchRunning]);
+
+useEffect(() => {
+  let interval: NodeJS.Timeout;
+
+  if (
+    timerRunning &&
+    timerSeconds > 0
+  ) {
+    interval = setInterval(() => {
+      setTimerSeconds(
+        (prev) => prev - 1
+      );
+    }, 1000);
+  }
+
+  if (
+    timerRunning &&
+    timerSeconds === 0
+  ) {
+    setTimerRunning(false);
+
+    alert(
+      "⏰ Zeit abgelaufen!"
+    );
+  }
+
+  return () =>
+    clearInterval(interval);
+}, [timerRunning, timerSeconds]);
+
   useEffect(() => {
     const updateClock = () => {
       const now = new Date();
 
-      setTime(
-        now.toLocaleTimeString("de-DE", {
-          hour: "2-digit",
-          minute: "2-digit",
-        })
-      );
-    };
+setTime(
+  now.toLocaleTimeString("de-DE", {
+    hour: "2-digit",
+    minute: "2-digit",
+  })
+);
 
+setSeconds(
+  now
+    .getSeconds()
+    .toString()
+    .padStart(2, "0")
+);
+      
+    };
+    
     updateClock();
 
     const interval = setInterval(updateClock, 1000);
@@ -114,7 +268,22 @@ export default function Home() {
       }
     }
   }, []);
+const backgrounds = {
+  default:
+    "bg-gradient-to-br from-zinc-950 to-black",
 
+  blue:
+    "bg-gradient-to-br from-blue-900 to-black",
+
+  purple:
+    "bg-gradient-to-br from-purple-900 to-black",
+
+  green:
+    "bg-gradient-to-br from-green-900 to-black",
+
+  sunset:
+    "bg-gradient-to-br from-orange-500 via-red-600 to-black",
+};
   const today = new Date().toLocaleDateString(
     "de-DE",
     {
@@ -125,8 +294,21 @@ export default function Home() {
     }
   );
 
-  return (
-    <div className="p-6 md:p-8 pb-28 md:pb-8">
+return (
+  <div
+    className={`
+      min-h-screen
+      p-6
+      md:p-8
+      pb-28
+      md:pb-8
+      ${
+        backgrounds[
+          background as keyof typeof backgrounds
+        ]
+      }
+    `}
+  >
       {/* Hero */}
       <div className="mb-10 rounded-[32px] border border-white/10 bg-white/5 backdrop-blur-xl p-8">
         <div className="flex flex-col lg:flex-row justify-between gap-6">
@@ -136,7 +318,7 @@ export default function Home() {
             </p>
 
             <h1 className="text-5xl md:text-6xl font-bold">
-              Hallo Jannik 👋
+              Hallo {username} 👋
             </h1>
 
             <p className="text-zinc-300 mt-4">
@@ -151,7 +333,7 @@ export default function Home() {
 
             <div>
               <p className="font-bold text-xl">
-                Jannik
+                {username}
               </p>
 
               <p className="text-green-400">
@@ -160,11 +342,43 @@ export default function Home() {
             </div>
           </div>
         </div>
+        <div className="mt-8">
+      <button
+        onClick={() =>
+          setFocusMode(true)
+        }
+        className="
+          bg-indigo-600
+          hover:bg-indigo-500
+          px-6
+          py-3
+          rounded-2xl
+          font-bold
+        "
+      >
+        🌙 Fokus-Modus starten
+      </button>
+    </div>
       </div>
 
       {/* Statistik Karten */}
       <div className="grid md:grid-cols-2 xl:grid-cols-4 gap-6">
-        <div className="bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-xl hover:scale-[1.02] transition">
+        <div
+            onClick={() =>
+              setShowClock(true)
+            }
+            className="
+              bg-white/5
+              border
+              border-white/10
+              rounded-3xl
+              p-6
+              backdrop-blur-xl
+              hover:scale-[1.02]
+              transition
+              cursor-pointer
+            "
+          >
           <p className="text-blue-400 text-sm">
             LIVE
           </p>
@@ -319,6 +533,503 @@ export default function Home() {
           </a>
         </div>
       </div>
+      <div className="mt-8 bg-white/5 border border-white/10 rounded-3xl p-6 backdrop-blur-xl">
+
+  <h2 className="text-2xl font-bold mb-6">
+    🎨 Hintergrund
+  </h2>
+
+  <div className="flex flex-wrap gap-4">
+
+    <button
+      onClick={() =>
+        changeBackground("default")
+      }
+      className="w-12 h-12 rounded-full bg-black border"
+    />
+
+    <button
+      onClick={() =>
+        changeBackground("blue")
+      }
+      className="w-12 h-12 rounded-full bg-blue-700"
+    />
+
+    <button
+      onClick={() =>
+        changeBackground("purple")
+      }
+      className="w-12 h-12 rounded-full bg-purple-700"
+    />
+
+    <button
+      onClick={() =>
+        changeBackground("green")
+      }
+      className="w-12 h-12 rounded-full bg-green-700"
+    />
+
+    <button
+      onClick={() =>
+        changeBackground("sunset")
+      }
+      className="w-12 h-12 rounded-full bg-orange-500"
+    />
+
+  </div>
+
+</div>
+{focusMode && (
+  <div
+    className="
+      fixed
+      inset-0
+      z-[99999]
+      bg-black
+      flex
+      flex-col
+      items-center
+      justify-center
+    "
+  >
+    <button
+      onClick={() =>
+        setFocusMode(false)
+      }
+      className="
+        absolute
+        top-6
+        right-6
+        text-4xl
+      "
+    >
+      ✖
+    </button>
+
+    <p className="text-zinc-500 mb-8">
+      Fokus-Modus
+    </p>
+
+    <div className="text-center">
+      <div
+        className="
+          text-yellow-400
+          text-[180px]
+          md:text-[300px]
+          font-bold
+          leading-none
+        "
+      >
+        {time}
+      </div>
+
+      <div
+        className="
+          text-zinc-400
+          text-4xl
+          mt-6
+        "
+      >
+        {today}
+      </div>
+    </div>
+  </div>
+)}
+
+     {showClock && (
+  <div
+    className="
+      fixed
+      inset-0
+      z-[9999]
+      bg-black
+      flex
+      flex-col
+      items-center
+      justify-center
+    "
+  >
+    <button
+      onClick={() =>
+        setShowClock(false)
+      }
+      className="
+        absolute
+        top-6
+        right-6
+        text-4xl
+      "
+    >
+      ✖
+    </button>
+
+<div className="absolute top-6 left-6 flex gap-3 flex-wrap">
+
+  <button
+    onClick={() => setClockMode("digital")}
+    className="px-4 py-2 rounded-xl bg-yellow-500 text-black font-bold"
+  >
+    🕒 Digital
+  </button>
+
+  <button
+    onClick={() => setClockMode("analog")}
+    className="px-4 py-2 rounded-xl bg-yellow-500 text-black font-bold"
+  >
+    🕰 Analog
+  </button>
+
+  <button
+    onClick={() => setClockMode("stopwatch")}
+    className="px-4 py-2 rounded-xl bg-yellow-500 text-black font-bold"
+  >
+    ⏱ Stoppuhr
+  </button>
+
+  <button
+    onClick={() => setClockMode("timer")}
+    className="px-4 py-2 rounded-xl bg-yellow-500 text-black font-bold"
+  >
+    ⏲ Timer
+  </button>
+
+</div>
+
+{clockMode === "stopwatch" && (
+  <div className="text-center">
+    <div className="text-[120px] font-bold text-yellow-400">
+      {new Date(stopwatchTime)
+        .toISOString()
+        .slice(11, 23)}
+    </div>
+
+    <div className="flex gap-4 justify-center mt-8">
+      <button
+        onClick={() =>
+          setStopwatchRunning(true)
+        }
+        className="bg-green-600 px-6 py-3 rounded-xl"
+      >
+        ▶ Start
+      </button>
+
+      <button
+        onClick={() =>
+          setStopwatchRunning(false)
+        }
+        className="bg-yellow-600 px-6 py-3 rounded-xl"
+      >
+        ⏸ Pause
+      </button>
+
+      <button
+        onClick={() => {
+          setStopwatchRunning(false);
+          setStopwatchTime(0);
+        }}
+        className="bg-red-600 px-6 py-3 rounded-xl"
+      >
+        🔄 Reset
+      </button>
+    </div>
+  </div>
+)}
+
+{clockMode === "timer" && (
+  <div className="text-center">
+    <div className="text-[120px] font-bold text-yellow-400">
+      {Math.floor(timerSeconds / 60)
+        .toString()
+        .padStart(2, "0")}
+      :
+      {(timerSeconds % 60)
+        .toString()
+        .padStart(2, "0")}
+    </div>
+
+<div className="flex gap-4 justify-center mb-6">
+
+  <div>
+    <p className="text-sm mb-2">
+      Minuten
+    </p>
+
+    <input
+      type="number"
+      min="0"
+      value={timerMinutes}
+      onChange={(e) =>
+        setTimerMinutes(
+          Number(e.target.value)
+        )
+      }
+      className="
+        bg-white/10
+        rounded-xl
+        p-3
+        w-24
+        text-center
+      "
+    />
+  </div>
+
+  <div>
+    <p className="text-sm mb-2">
+      Sekunden
+    </p>
+
+    <input
+      type="number"
+      min="0"
+      max="59"
+      value={timerInputSeconds}
+      onChange={(e) =>
+        setTimerInputSeconds(
+          Number(e.target.value)
+        )
+      }
+      className="
+        bg-white/10
+        rounded-xl
+        p-3
+        w-24
+        text-center
+      "
+    />
+  </div>
+
+</div>
+
+    <div className="flex gap-4 justify-center">
+      <button
+        onClick={() => {
+          setTimerSeconds(
+            timerMinutes * 60 +
+              timerInputSeconds
+          );
+
+          setTimerRunning(true);
+        }}
+        className="bg-green-600 px-6 py-3 rounded-xl"
+      >
+        ▶ Start
+      </button>
+
+      <button
+        onClick={() =>
+          setTimerRunning(false)
+        }
+        className="bg-yellow-600 px-6 py-3 rounded-xl"
+      >
+        ⏸ Pause
+      </button>
+
+      <button
+        onClick={() => {
+          setTimerRunning(false);
+          setTimerSeconds(
+            timerMinutes * 60 +
+              timerInputSeconds
+          );
+        }}
+        className="bg-red-600 px-6 py-3 rounded-xl"
+      >
+        🔄 Reset
+      </button>
+    </div>
+  </div>
+)}
+
+    {clockMode === "digital" ? (
+      <>
+        <div className="flex items-end">
+          <span
+            className="
+              text-yellow-400
+              font-bold
+              text-[180px]
+              md:text-[320px]
+              leading-none
+            "
+          >
+            {time}
+          </span>
+
+          <span
+            className="
+              text-yellow-300
+              text-6xl
+              md:text-8xl
+              mb-10
+              ml-4
+            "
+          >
+            {seconds}
+          </span>
+        </div>
+
+        <p
+          className="
+            text-zinc-400
+            text-2xl
+            md:text-4xl
+            mt-6
+          "
+        >
+          {today}
+        </p>
+      </>
+    ) : clockMode === "analog" ? ( 
+<div
+  className="
+    relative
+    w-[350px]
+    h-[350px]
+    md:w-[600px]
+    md:h-[600px]
+    rounded-full
+    border-[12px]
+    border-yellow-400
+  "
+>
+  {/* Striche */}
+  {[...Array(60)].map((_, i) => {
+    const angle = (i * 6 - 90) * (Math.PI / 180);
+
+    const radius = 270;
+
+    const x = Math.cos(angle) * radius;
+    const y = Math.sin(angle) * radius;
+
+    return (
+      <div
+        key={`tick-${i}`}
+        className="absolute"
+        style={{
+          left: `calc(50% + ${x}px)`,
+          top: `calc(50% + ${y}px)`,
+          width: i % 5 === 0 ? "4px" : "2px",
+          height: i % 5 === 0 ? "24px" : "12px",
+          backgroundColor: "#facc15",
+          transform: `
+            translate(-50%, -50%)
+            rotate(${i * 6}deg)
+          `,
+        }}
+      />
+    );
+  })}
+
+  {/* Zahlen */}
+  {[...Array(12)].map((_, i) => {
+    const number = i + 1;
+
+    const angle =
+      (number * 30 - 90) *
+      (Math.PI / 180);
+
+    const radius = 235;
+
+    const x =
+      Math.cos(angle) * radius;
+
+    const y =
+      Math.sin(angle) * radius;
+
+    return (
+      <div
+        key={number}
+        className="
+          absolute
+          text-yellow-400
+          font-bold
+          text-3xl
+        "
+        style={{
+          left: `calc(50% + ${x}px)`,
+          top: `calc(50% + ${y}px)`,
+          transform:
+            "translate(-50%, -50%)",
+        }}
+      >
+        {number}
+      </div>
+    );
+  })}
+
+  {/* Mittelpunkt */}
+  <div
+    className="
+      absolute
+      top-1/2
+      left-1/2
+      w-4
+      h-4
+      bg-yellow-400
+      rounded-full
+      -translate-x-1/2
+      -translate-y-1/2
+    "
+  />
+
+  {/* Stundenzeiger */}
+  <div
+    className="
+      absolute
+      top-1/2
+      left-1/2
+      origin-bottom
+      bg-yellow-400
+    "
+    style={{
+      width: "8px",
+      height: "160px",
+      transform: `translate(-50%, -100%) rotate(${
+        new Date().getHours() * 30 +
+        new Date().getMinutes() * 0.5
+      }deg)`,
+    }}
+  />
+
+  {/* Minutenzeiger */}
+  <div
+    className="
+      absolute
+      top-1/2
+      left-1/2
+      origin-bottom
+      bg-yellow-300
+    "
+    style={{
+      width: "5px",
+      height: "220px",
+      transform: `translate(-50%, -100%) rotate(${
+        new Date().getMinutes() * 6
+      }deg)`,
+    }}
+  />
+
+  {/* Sekundenzeiger */}
+  <div
+    className="
+      absolute
+      top-1/2
+      left-1/2
+      origin-bottom
+      bg-red-500
+    "
+    style={{
+      width: "2px",
+      height: "250px",
+      transform: `translate(-50%, -100%) rotate(${
+        new Date().getSeconds() * 6
+      }deg)`,
+    }}
+  /> 
+</div>
+) : null}
+  </div>
+)}
     </div>
   );
 }

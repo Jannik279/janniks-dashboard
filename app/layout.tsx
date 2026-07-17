@@ -1,3 +1,4 @@
+import AuthProvider from "@/components/AuthProvider";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 
@@ -32,25 +33,27 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable}`}
     >
       <body
-        className="
-          min-h-screen
-          bg-gradient-to-br
-          from-slate-950
-          via-indigo-950
-          to-slate-900
-          text-white
-        "
-      >
-        <div className="flex min-h-screen">
-          <Sidebar />
+  className="
+    min-h-screen
+    bg-gradient-to-br
+    from-slate-950
+    via-indigo-950
+    to-slate-900
+    text-white
+  "
+>
+  <AuthProvider>
+    <div className="flex min-h-screen">
+      <Sidebar />
 
-          <main className="flex-1">
-            {children}
-          </main>
-        </div>
+      <main className="flex-1">
+        {children}
+      </main>
+    </div>
 
-        <MobileNav />
-      </body>
+    <MobileNav />
+  </AuthProvider>
+</body>
     </html>
   );
 }

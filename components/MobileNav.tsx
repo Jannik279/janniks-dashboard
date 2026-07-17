@@ -23,9 +23,19 @@ icon: "✅",
 label: "Tasks",
 },
 {
+href: "/notes",
+icon: "📝",
+label: "Notizen",
+},
+{
 href: "/calendar",
 icon: "📅",
 label: "Kalender",
+},
+{
+  href: "/admin",
+  icon: "👑",
+  label: "Admin",
 },
 {
 href: "/settings",
