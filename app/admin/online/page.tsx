@@ -10,7 +10,7 @@ type UserStatus = {
   last_seen: string;
   profiles: {
     username: string;
-  };
+  }[];
 };
 
 export default function OnlineUsersPage() {
@@ -47,9 +47,7 @@ export default function OnlineUsersPage() {
       return;
     }
 
-    setUsers(
-      (data as UserStatus[]) || []
-    );
+    setUsers(data || []);
   }
 
   function isOnline(
@@ -95,8 +93,7 @@ export default function OnlineUsersPage() {
               "
             >
               <h2 className="text-xl font-bold">
-                {user.profiles
-                  ?.username ||
+                {user.profiles?.[0]?.username ||
                   "Unbekannt"}
               </h2>
 

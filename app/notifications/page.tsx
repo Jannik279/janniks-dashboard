@@ -168,11 +168,4 @@ return (
 </div>
 
 );
-}<button
-  onClick={() => {
-    alert("Klick funktioniert");
-    markAsRead(item.id);
-  }}
->
-  ✓ Als gelesen markieren
-</button>
+}

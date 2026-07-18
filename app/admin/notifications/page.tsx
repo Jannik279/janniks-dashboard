@@ -11,9 +11,18 @@ important: boolean;
 created_at: string;
 };
 
+type ReadUser = {
+  notification_id: string;
+  profiles: {
+    username: string;
+  }[];
+};
+
+
 export default function AdminNotificationsPage() {
 const [notifications, setNotifications] =
   useState<Notification[]>([]);
+  
 const [reads, setReads] =
   useState<ReadUser[]>([]);
 
@@ -59,9 +68,7 @@ async function loadReads() {
         )
       `);
 
-  setReads(
-    (data as ReadUser[]) || []
-  );
+setReads(data || []);
 }
 
 async function createNotification() {
@@ -236,8 +243,7 @@ return (
         "
       >
         ✓ {
-          read.profiles
-            ?.username
+          read.profiles?.[0]?.username
         }
       </div>
     ))}

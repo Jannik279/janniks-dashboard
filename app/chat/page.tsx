@@ -9,7 +9,7 @@ type Message = {
   created_at: string;
   profiles: {
     username: string;
-  };
+  }[];
 };
 
 export default function ChatPage() {
@@ -75,9 +75,7 @@ checkAdmin();
       `)
       .order("created_at");
 
-    setMessages(
-      (data as Message[]) || []
-    );
+setMessages(data || []);
   }
 
   async function sendMessage() {
@@ -163,7 +161,7 @@ console.log("CHAT ERROR:", error);
             className="mb-4"
           >
             <p className="font-bold text-blue-400">
-              {msg.profiles?.username}
+              {msg.profiles?.[0]?.username}
             </p>
 
             <p>{msg.message}</p>
